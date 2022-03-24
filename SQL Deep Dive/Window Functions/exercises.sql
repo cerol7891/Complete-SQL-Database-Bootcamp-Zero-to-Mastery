@@ -3,9 +3,11 @@
 *  Database: World
 *  Table: Country
 */
+SELECT continent, sum(population) as "total population" 
+from "public"."country"
+group by continent
 
-SELECT *
-FROM country;
+order by "total population" desc
 
 /*
 *  To the previous query add on the ability to calculate the percentage of the world population
@@ -17,9 +19,15 @@ FROM country;
 *  Table: Country
 */
 
-SELECT *
-FROM country;
+SELECT
+  DISTINCT continent,
+  sum(population) OVER(
+  partition by continent) as "continent population",
+    concat(round((sum(population::float4) over(
+    partition by continent)/sum(population::float4) over())*100),'%') as "percentage"
+FROM "public"."country"
 
+order by "continent population" DESC
 
 /*
 *  Count the number of towns per region
@@ -28,5 +36,10 @@ FROM country;
 *  Table: Regions (Join + Window function)
 */
 
-SELECT *
-FROM regions AS r;
+SELECT  
+    distinct regions.name as "region", 
+    count(towns.name) over(
+    partition by "regions"."name") as "town" 
+from "public"."regions"
+inner join "public"."towns"
+on regions.code=towns.department
